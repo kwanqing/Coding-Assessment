@@ -4,32 +4,31 @@
     <div class="hideBar">
       <label class="hideLabel"> Hide: </label>
       <div class="checkbox">
-        <!-- All status -->
-        <input
-          :id="productDataBystatus.status"
+      <!-- All status -->
+      <input
+          id="allStatus"
           type="checkbox"
           class="styled"
-          :value="productDataBystatus.status"
           @click="hideShowALLstatus"
-          v-model="hidestatus"
+          v-model="allCheck"
         />
-        <label :for="productDataBystatus.status">All statuses</label>
+        <label for="allStatus">All statuses</label>
 
-        <!-- Dynamic status -->
-        <div v-for="status in productDataBystatus.status" :key="`${status}`">
-          <input
-            :id="`${status}`"
-            type="checkbox"
-            class="styled"
-            :value="status"
-            v-model="hidestatus"
-          />
-          <label :for="`${status}`">
-            {{ status }}
-          </label>
-        </div>
-      </div>
-    </div>
+      <!-- Dynamic status -->
+      <div v-for="status in productDataBystatus.status" :key="status">
+                <input
+                  :id="status"
+                  type="checkbox"
+                  class="styled"
+                  :value="status"
+                  v-model="hidestatus"
+                />
+                <label :for="status">
+                  {{ status }}
+                </label>
+              </div>
+            </div>
+          </div>
 
     <!-- Main Table Design -->
     <table>
@@ -105,66 +104,25 @@
 </template>
 
 
+<!-- I've used the Composition API's setup function to handle the logic.
+The data, methods, and computed from Vue 2 have been replaced by ref, computed, and normal functions inside setup.
+Moved all the methods inside the setup function for clarity.
+Used the value property of refs when accessing or modifying their values.
+I've removed the methods object since we're now defining functions directly inside setup. -->
 <script>
+import { ref, computed } from 'vue';
 import data from "../assets/data.json";
+
 export default {
-  data: function () {
-    return {
-      hidestatus: [],
-      allCheckBox: [],
-      UIData: [],
-      wwInfo: {},
-      allCheck: false,
-    };
-  },
-  mounted() {
-    this.UIData = data;
-    this.wwInfo = this.getWWFromDate();
-  },
-  computed: {
-    wwData() {
-      return `${this.wwInfo.year}WW${this.wwInfo.workweek}.${this.wwInfo.numofday}`;
-    },
+  setup() {
+    const UIData = ref(data);
+    const hidestatus = ref([]);
+    const allCheck = ref(false);
 
-    productDataBystatus() {
-      let tmp = {};
-      let data = this.UIData;
-      let statusSet = new Set();
+    const wwInfo = computed(() => getWWFromDate());
+    const productDataBystatus = computed(() => processProductDataByStatus(UIData.value, hidestatus.value));
 
-      data.forEach((element) => {
-        let status = element.Status;
-        let cores = element.Cores;
-
-        // push status to set
-        statusSet.add(status);
-
-        if (this.hidestatus.includes(status)) return; // Hide by status
-        if (!tmp[status]) tmp[status] = {};
-        if (!tmp[status][cores]) tmp[status][cores] = [];
-
-        tmp[status][cores].push(element);
-      });
-
-      // sort status in order
-      const strings = new Set(statusSet);
-      const sortedStringsArray = [...strings].sort();
-      statusSet = new Set(sortedStringsArray);
-
-      return {
-        status: [...statusSet],
-        data: tmp,
-      };
-    },
-  },
-  methods: {
-    calstatusRowspan(data) {
-      let sum = Object.keys(data).length + 1;
-      for (const cores in data) {
-        sum += Object.keys(data[cores]).length;
-      }
-      return sum;
-    },
-    getWWFromDate(date = null) {
+    function getWWFromDate(date = null) {
       let currentDate = date || new Date();
       let startDate = new Date(currentDate.getFullYear(), 0, 1);
       let days = Math.floor((currentDate - startDate) / (24 * 60 * 60 * 1000));
@@ -174,27 +132,57 @@ export default {
         workweek: Math.ceil(days / 7),
         numofday: currentDate.getDay(),
       };
-    },
-    hideShowALLstatus() {
-      if (!document.querySelector(".styled").checked) {
-        this.hidestatus = [];
-        this.allCheckBox = [];
+    }
+
+    function processProductDataByStatus(data, hidestatus) {
+      let tmp = {};
+      let statusSet = new Set();
+
+      data.forEach((element) => {
+        let status = element.Status;
+        let cores = element.Cores;
+
+        statusSet.add(status);
+
+        if (hidestatus.includes(status)) return;
+        if (!tmp[status]) tmp[status] = {};
+        if (!tmp[status][cores]) tmp[status][cores] = [];
+
+        tmp[status][cores].push(element);
+      });
+
+      return {
+        status: [...statusSet].sort(),
+        data: tmp,
+      };
+    }
+
+    function calstatusRowspan(data) {
+      let sum = Object.keys(data).length + 1;
+      for (const cores in data) {
+        sum += Object.keys(data[cores]).length;
       }
+      return sum;
+    }
 
-      if (document.querySelector(".styled").checked) {
-        this.hidestatus = this.productDataBystatus.status;
-        this.allCheckBox = this.productDataBystatus.status;
-      }
-
-      this.allCheck = !this.allCheck;
-
-      if (this.allCheck) {
+    function hideShowALLstatus() {
+      if (allCheck.value) {
+        hidestatus.value = []; // Show everything
       } else {
-        this.hidestatus = [];
-        this.allCheckBox = [];
+        hidestatus.value = [...productDataBystatus.value.status]; // Hide everything
       }
-    },
-  },
+      allCheck.value = !allCheck.value;
+    }
+
+    return {
+      hidestatus,
+      allCheck,
+      wwInfo,
+      productDataBystatus,
+      calstatusRowspan,
+      hideShowALLstatus,
+    };
+  }
 };
 </script>
 
