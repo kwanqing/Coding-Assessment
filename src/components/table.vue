@@ -16,19 +16,19 @@
 
       <!-- Dynamic status -->
       <div v-for="status in productDataBystatus.status" :key="status">
-                <input
-                  :id="status"
-                  type="checkbox"
-                  class="styled"
-                  :value="status"
-                  v-model="hidestatus"
-                />
-                <label :for="status">
-                  {{ status }}
-                </label>
-              </div>
-            </div>
-          </div>
+        <input
+          :id="status"
+          type="checkbox"
+          class="styled"
+          :value="status"
+          v-model="hidestatus"
+        />
+        <label :for="status">
+          {{ status }}
+        </label>
+      </div>
+    </div>
+  </div>
 
     <!-- Main Table Design -->
     <table>
@@ -51,64 +51,71 @@
         </tr>
       </thead>
       <tbody>
-        <template v-for="(data, status, index) in productDataBystatus.data">
-          <!-- status -->
-          <tr>
-            <td class="width1" :rowspan="calstatusRowspan(data)">
-              {{ status }}
-            </td>
-          </tr>
+    <template v-for="status in paginatedData.status">
+      <!-- status -->
+      <tr>
+        <td class="width1" :rowspan="calstatusRowspan(paginatedData.data[status])">
+          {{ status }}
+        </td>
+      </tr>
 
-          <template v-for="cores in Object.keys(data)">
-            <!-- cores -->
-            <tr>
-              <td class="width1" :rowspan="Object.keys(data[cores]).length + 1">
-                {{ cores }}
-              </td>
-            </tr>
+      <template v-for="cores in Object.keys(paginatedData.data[status])">
+        <!-- cores -->
+        <tr>
+          <td class="width1" :rowspan="Object.keys(paginatedData.data[status][cores]).length + 1">
+            {{ cores }}
+          </td>
+        </tr>
 
-            <tr v-for="(v, k) in data[cores]">
-              <!-- product -->
-              <td class="productColumn">{{ v.Product }}</td>
+        <tr v-for="product in paginatedData.data[status][cores]">
+          <!-- product -->
+          <td class="productColumn">{{ product.Product }}</td>
 
-              <!-- Lithography -->
-              <td>{{ v.Lithography }}</td>
+          <!-- Lithography -->
+          <td>{{ product.Lithography }}</td>
 
-              <!-- Threads -->
-              <td>
-                <div class="innerCells">
-                  <input :value="v.Threads" :disabled="true" type="text" />
-                </div>
-              </td>
+          <!-- Threads -->
+          <td>
+            <div class="innerCells">
+              <input :value="product.Threads" disabled type="text" />
+            </div>
+          </td>
 
-              <!-- Base Freq -->
-              <td>
-                <div class="innerCells">
-                  <input :value="v.Base_Freq" :disabled="true" type="text" />
-                </div>
-              </td>
+          <!-- Base Freq -->
+          <td>
+            <div class="innerCells">
+              <input :value="product.Base_Freq" disabled type="text" />
+            </div>
+          </td>
 
-              <!-- Max Turbo Freq -->
-              <td>
-                <div class="innerCells">
-                  <input :value="v.Max_Turbo_Freq" type="text" :disabled="true" />
-                </div>
-              </td>
-            </tr>
-          </template>
-        </template>
-      </tbody>
+          <!-- Max Turbo Freq -->
+          <td>
+            <div class="innerCells">
+              <input :value="product.Max_Turbo_Freq" disabled type="text" />
+            </div>
+          </td>
+        </tr>
+      </template>
+    </template>
+  </tbody>
     </table>
     <!-- End of Table Design -->
+
+    <!-- Pagination Controls -->
+    <div class="pagination-controls">
+      <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
+      <span>Page {{ currentPage }} of {{ Math.ceil(totalRows / rowsPerPage) }}</span>
+      <button @click="nextPage" :disabled="currentPage * rowsPerPage >= totalRows">Next</button>
+    </div>
   </div>
 </template>
 
 
-<!-- I've used the Composition API's setup function to handle the logic.
+<!-- I have used the Composition API's setup function to handle the logic.
 The data, methods, and computed from Vue 2 have been replaced by ref, computed, and normal functions inside setup.
 Moved all the methods inside the setup function for clarity.
 Used the value property of refs when accessing or modifying their values.
-I've removed the methods object since we're now defining functions directly inside setup. -->
+I have removed the methods object since we're now defining functions directly inside setup. -->
 <script>
 import { ref, computed } from 'vue';
 import data from "../assets/data.json";
@@ -119,6 +126,62 @@ export default {
     const hidestatus = ref([]);
     const allCheck = ref(false);
 
+    // Pagination refs
+    const currentPage = ref(1);
+    const rowsPerPage = ref(100);
+    const totalRows = computed(() => Object.keys(productDataBystatus.value.data).reduce((acc, status) => acc + calstatusRowspan(productDataBystatus.value.data[status]), 0));
+    
+    const paginatedData = computed(() => {
+    const startIndex = (currentPage.value - 1) * rowsPerPage.value;
+    let endIndex = startIndex + rowsPerPage.value;
+    let paginatedItems = [];
+    let itemCount = 0;
+
+    for (const status of Object.keys(productDataBystatus.value.data)) {
+      for (const cores of Object.keys(productDataBystatus.value.data[status])) {
+        for (const product of productDataBystatus.value.data[status][cores]) {
+          if (itemCount >= startIndex && itemCount < endIndex) {
+            if (!paginatedItems[status]) {
+              paginatedItems[status] = {};
+            }
+            if (!paginatedItems[status][cores]) {
+              paginatedItems[status][cores] = [];
+            }
+            paginatedItems[status][cores].push(product);
+          }
+          itemCount++;
+          console.log("no:", itemCount)
+          if (itemCount >= endIndex) break;
+        }
+        if (itemCount >= endIndex) break;
+      }
+      if (itemCount >= endIndex) break;
+    }
+
+    return {
+      status: Object.keys(paginatedItems),
+      data: paginatedItems,
+    };
+  });
+
+    // Methods for pagination
+    function nextPage() {
+      if (currentPage.value * rowsPerPage.value < totalRows.value) {
+        currentPage.value++;
+      }
+    }
+
+    function prevPage() {
+      if (currentPage.value > 1) {
+        currentPage.value--;
+      }
+    }
+
+    function setPage(page) {
+      currentPage.value = page;
+    }
+
+    
     const wwInfo = computed(() => getWWFromDate());
     const productDataBystatus = computed(() => processProductDataByStatus(UIData.value, hidestatus.value));
 
@@ -181,6 +244,13 @@ export default {
       productDataBystatus,
       calstatusRowspan,
       hideShowALLstatus,
+      currentPage,
+      rowsPerPage,
+      totalRows,
+      paginatedData,
+      nextPage,
+      prevPage,
+      setPage,
     };
   }
 };
