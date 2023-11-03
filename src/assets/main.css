@@ -12,3 +12,19 @@ input[type="text"] {
   text-align: center;
   border: 0;
 }
+
+.status-Announced {
+  background-color: #7fff00;
+}
+
+.status-Discontinued {
+  background-color: #ffa500;
+}
+
+.status-Launched {
+  background-color: #00b0f0;
+}
+
+.status-LaunchedwithIPU {
+  background-color: #82ffac;
+}

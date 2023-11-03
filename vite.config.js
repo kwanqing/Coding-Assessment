@@ -21,6 +21,7 @@ export default defineConfig({
   }
 })
 
+
 //Install the Vue 3 plugin for Vite
 //Update your Vite configuration:
 //Replace @vitejs/plugin-vue2 with @vitejs/plugin-vue and update the plugins array:

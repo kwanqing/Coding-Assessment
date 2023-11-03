@@ -51,9 +51,10 @@
         </tr>
       </thead>
       <tbody>
+
     <template v-for="status in paginatedData.status">
       <!-- status -->
-      <tr>
+      <tr :class="getStatusClass(status)">
         <td class="width1" :rowspan="calstatusRowspan(paginatedData.data[status])">
           {{ status }}
         </td>
@@ -237,6 +238,16 @@ export default {
       allCheck.value = !allCheck.value;
     }
 
+    function getStatusClass(status) {
+      const statusClasses = {
+        'Announced': 'status-Announced',
+        'Discontinued': 'status-Discontinued',
+        'Launched': 'status-Launched',
+        'Launched (with IPU)': 'status-LaunchedwithIPU',
+      };
+      return statusClasses[status] || '';
+    }
+
     return {
       hidestatus,
       allCheck,
@@ -251,6 +262,7 @@ export default {
       nextPage,
       prevPage,
       setPage,
+      getStatusClass,
     };
   }
 };
