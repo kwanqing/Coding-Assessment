@@ -34,7 +34,12 @@
 import { ref } from 'vue';
 
 export default {
-  props: ['statuses'],
+  props: {
+    statuses: {
+      type: Array,
+      default: () => [] 
+    }
+  },
   emits: ['update:hidestatus'],
   setup(props, { emit }) {
     const hidestatus = ref([]);
@@ -42,9 +47,9 @@ export default {
 
     function hideShowALLstatus() {
       if (allCheck.value) {
-        hidestatus.value = []; // Show everything
+        hidestatus.value = []; 
       } else {
-        hidestatus.value = [...props.statuses]; // Hide everything
+        hidestatus.value = [...props.statuses]; 
       }
       allCheck.value = !allCheck.value;
       emit('update:hidestatus', hidestatus.value);
@@ -58,63 +63,6 @@ export default {
   }
 };
 </script>
-
-<!-- <script>
-import { ref, watch, emit } from 'vue';
-
-export default {
-  props: {
-    statuses: Array
-  },
-  emits: ['update:hidestatus'],
-  setup(props, { emit }) {
-    const allCheck = ref(false);
-    const hidestatus = ref([]);
-
-    watch(allCheck, (newValue) => {
-      hidestatus.value = newValue ? props.statuses : [];
-      emit('update:hidestatus', hidestatus.value);
-    });
-
-    function hideShowALLstatus() {
-      allCheck.value = !allCheck.value;
-    }
-
-    return {
-      allCheck,
-      hidestatus,
-      hideShowALLstatus
-    };
-  }
-};
-</script> -->
-
-<!-- <script>
-export default {
-  props: {
-    statuses: {
-      type: Array,
-      required: true
-    }
-  },
-  data() {
-    return {
-      hidestatus: [],
-      allCheck: false
-    };
-  },
-  methods: {
-    hideShowALLstatus() {
-      if (this.allCheck) {
-        this.hidestatus = [];
-      } else {
-        this.hidestatus = [...this.statuses];
-      }
-      this.allCheck = !this.allCheck;
-    }
-  }
-};
-</script> -->
 
 <style>
 .hideBar {

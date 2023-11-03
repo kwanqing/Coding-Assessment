@@ -52,7 +52,7 @@
       </thead>
       <tbody>
 
-    <template v-for="status in paginatedData.status">
+    <template v-for="status in filteredData.status">
       <!-- status -->
       <tr :class="getStatusClass(status)">
         <td class="width1" :rowspan="calstatusRowspan(paginatedData.data[status])">
@@ -102,12 +102,16 @@
     </table>
     <!-- End of Table Design -->
 
-    <!-- Pagination Controls -->
-    <div class="pagination-controls">
-      <button @click="prevPage" :disabled="currentPage === 1">Previous</button>
-      <span>Page {{ currentPage }} of {{ Math.ceil(totalRows / rowsPerPage) }}</span>
-      <button @click="nextPage" :disabled="currentPage * rowsPerPage >= totalRows">Next</button>
-    </div>
+    <!-- Pagination Component -->
+    <Pagination
+      :current-page="currentPage"
+      :total-rows="totalRows"
+      :rows-per-page="rowsPerPage"
+      @update:currentPage="setPage"
+    />
+    
+    <!-- Search bar component -->
+    <SearchBar @search="handleSearch" />
   </div>
 </template>
 
@@ -120,12 +124,19 @@ I have removed the methods object since we're now defining functions directly in
 <script>
 import { ref, computed } from 'vue';
 import data from "../assets/data.json";
+import Pagination from './pagination.vue';
+import SearchBar from './SearchBar.vue';
 
 export default {
+  components: {
+    Pagination,
+    SearchBar
+  },
   setup() {
     const UIData = ref(data);
     const hidestatus = ref([]);
     const allCheck = ref(false);
+    const searchQuery = ref('');
 
     // Pagination refs
     const currentPage = ref(1);
@@ -151,7 +162,7 @@ export default {
             paginatedItems[status][cores].push(product);
           }
           itemCount++;
-          console.log("no:", itemCount)
+          // console.log("no:", itemCount)
           if (itemCount >= endIndex) break;
         }
         if (itemCount >= endIndex) break;
@@ -165,18 +176,21 @@ export default {
     };
   });
 
-    // Methods for pagination
-    function nextPage() {
-      if (currentPage.value * rowsPerPage.value < totalRows.value) {
-        currentPage.value++;
-      }
-    }
+  const handleSearch = (query) => {
+      searchQuery.value = query;
+    };
 
-    function prevPage() {
-      if (currentPage.value > 1) {
-        currentPage.value--;
+    const filteredData = computed(() => {
+      if (!searchQuery.value) {
+        return paginatedData.value;
       }
-    }
+      const searchLower = searchQuery.value.toLowerCase();
+      return {
+        status: paginatedData.value.status.filter(status => 
+          status.toLowerCase().includes(searchLower)),
+        data: paginatedData.value.data // You need to implement the logic to filter this data based on the search query
+      };
+    });
 
     function setPage(page) {
       currentPage.value = page;
@@ -259,10 +273,11 @@ export default {
       rowsPerPage,
       totalRows,
       paginatedData,
-      nextPage,
-      prevPage,
       setPage,
       getStatusClass,
+      searchQuery,
+      handleSearch,
+      filteredData
     };
   }
 };
