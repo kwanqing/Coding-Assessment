@@ -14,12 +14,6 @@
     </div>
 </template>
 
-<!-- I've used the Composition API's setup function to handle the logic.
-The data, methods, and computed from Vue 2 have been replaced by ref, computed, and normal functions inside setup.
-Moved all the methods inside the setup function for clarity.
-Used the value property of refs when accessing or modifying their values.
-I've removed the methods object since we're now defining functions directly inside setup. -->
-
 <script>
 import { ref, computed } from 'vue';
 import HideStatus from './HideStatus.vue';

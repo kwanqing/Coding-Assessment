@@ -52,7 +52,7 @@
       </thead>
       <tbody>
 
-    <template v-for="status in filteredData.status">
+    <template v-for="status in paginatedData.status">
       <!-- status -->
       <tr :class="getStatusClass(status)">
         <td class="width1" :rowspan="calstatusRowspan(paginatedData.data[status])">
@@ -110,33 +110,29 @@
       @update:currentPage="setPage"
     />
     
-    <!-- Search bar component -->
-    <SearchBar @search="handleSearch" />
+    <!-- Search bar component
+    <div class="search-bar-container">
+      <SearchBar @search="handleSearch" />
+    </div> -->
   </div>
 </template>
 
-
-<!-- I have used the Composition API's setup function to handle the logic.
-The data, methods, and computed from Vue 2 have been replaced by ref, computed, and normal functions inside setup.
-Moved all the methods inside the setup function for clarity.
-Used the value property of refs when accessing or modifying their values.
-I have removed the methods object since we're now defining functions directly inside setup. -->
 <script>
 import { ref, computed } from 'vue';
 import data from "../assets/data.json";
 import Pagination from './pagination.vue';
-import SearchBar from './SearchBar.vue';
+// import SearchBar from './SearchBar.vue';
 
 export default {
   components: {
     Pagination,
-    SearchBar
+    // SearchBar
   },
   setup() {
     const UIData = ref(data);
     const hidestatus = ref([]);
     const allCheck = ref(false);
-    const searchQuery = ref('');
+    // const searchQuery = ref('');
 
     // Pagination refs
     const currentPage = ref(1);
@@ -176,21 +172,22 @@ export default {
     };
   });
 
-  const handleSearch = (query) => {
-      searchQuery.value = query;
-    };
+  // const handleSearch = (query) => {
+  //     searchQuery.value = query;
+  //     currentPage.value = 1;
+  //   };
 
-    const filteredData = computed(() => {
-      if (!searchQuery.value) {
-        return paginatedData.value;
-      }
-      const searchLower = searchQuery.value.toLowerCase();
-      return {
-        status: paginatedData.value.status.filter(status => 
-          status.toLowerCase().includes(searchLower)),
-        data: paginatedData.value.data // You need to implement the logic to filter this data based on the search query
-      };
-    });
+  //   const filteredData = computed(() => {
+  //     if (!searchQuery.value) {
+  //       return paginatedData.value;
+  //     }
+  //     const searchLower = searchQuery.value.toLowerCase();
+  //     return {
+  //       status: paginatedData.value.status.filter(status => 
+  //         status.toLowerCase().includes(searchLower)),
+  //       data: paginatedData.value.data 
+  //     };
+  //   });
 
     function setPage(page) {
       currentPage.value = page;
@@ -275,9 +272,9 @@ export default {
       paginatedData,
       setPage,
       getStatusClass,
-      searchQuery,
-      handleSearch,
-      filteredData
+      // searchQuery,
+      // handleSearch,
+      // filteredData
     };
   }
 };
@@ -468,4 +465,13 @@ th {
   width: 1%;
   /* white-space: nowrap !important; */
 }
+
+.search-bar-container {
+  margin-bottom: 1rem; /* Adjust as needed */
+}
+
+.table-container {
+  overflow-x: auto; /* If table is wide, this allows for scrolling */
+}
+
 </style>
